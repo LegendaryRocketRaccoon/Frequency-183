@@ -281,7 +281,17 @@ window.addEventListener('keydown', e => {
     const index = characters.indexOf(currentCharacter);
     currentCharacter = characters[(index + 1) % characters.length];
   }
-  if (e.key.toLowerCase() === 'e') currentCharacter.useAbility();
+    if (e.key.toLowerCase() === 'e') {
+    currentCharacter.useAbility();
+  }
+canvas.addEventListener('mousedown', e => {
+  if (e.button === 0) {
+    currentCharacter.useAbility();
+  }
+});
+canvas.addEventListener('touchstart', () => {
+  currentCharacter.useAbility();
+});
 });
 window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
