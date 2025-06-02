@@ -1,411 +1,689 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <meta charset="UTF-8">
   <title>Frequency 183</title>
   <style>
-    body { margin: 0; background: #111; color: white; font-family: sans-serif; }
-    canvas { display: block; margin: 0 auto; border: 3px solid white; }
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Press+Start+2P&display=swap');
+
+    body {
+      margin: 0;
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border: 3px solid white;
+    }
+
     #hud {
       position: absolute;
       top: 10px;
       left: 10px;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0, 0, 0, 0.6);
       padding: 10px;
       border-radius: 8px;
       font-size: 16px;
+
+      #characterSelect {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #0b0b0b;
+        color: #00ccff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        z-index: 2;
+        font-family: 'Press Start 2P', cursive;
+        text-align: center;
+        overflow: hidden;
+        animation: flicker 3s infinite;
+        background-image: repeating-linear-gradient(0deg,
+            rgba(255, 255, 255, 0.02),
+            rgba(255, 255, 255, 0.02) 1px,
+            transparent 1px,
+            transparent 3px);
+      }
+
+      #characterSelect h1 {
+        font-size: 24px;
+        color: #ff00cc;
+        text-shadow: 0 0 8px #ff00cc, 0 0 16px #9900ff;
+        margin-bottom: 20px;
+        animation: flickerTitle 2s infinite;
+      }
+
+      .character-button {
+        font-size: 14px;
+        padding: 20px 40px;
+        background: linear-gradient(to bottom, #1a1a1a, #000);
+        border: 4px solid #00ccff;
+        border-radius: 4px;
+        color: #00ffff;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow:
+          0 0 10px #00ccff,
+          0 0 20px #00ccff,
+          inset 0 0 5px #000;
+        font-family: 'Press Start 2P', cursive;
+        position: relative;
+        overflow: hidden;
+        transition: 0.3s ease;
+        animation: pulseBtn 2s infinite;
+      }
+
+      .character-button:hover {
+        background: #330033;
+        color: #ffffff;
+        box-shadow:
+          0 0 20px #ff00ff,
+          0 0 40px #ff00ff,
+          inset 0 0 5px #000;
+      }
+
+      @keyframes pulseBtn {
+
+        0%,
+        100% {
+          box-shadow: 0 0 10px #00ccff, 0 0 20px #00ccff;
+        }
+
+        50% {
+          box-shadow: 0 0 20px #ff00ff, 0 0 40px #ff00ff;
+        }
+      }
+
+      @keyframes flicker {
+
+        0%,
+        100% {
+          opacity: 1;
+        }
+
+        50% {
+          opacity: 0.97;
+        }
+
+        75% {
+          opacity: 0.98;
+        }
+      }
+
+      @keyframes flickerTitle {
+        0% {
+          opacity: 1;
+          text-shadow: 0 0 6px #ff00cc;
+        }
+
+        50% {
+          opacity: 0.85;
+          text-shadow: 0 0 10px #9900ff;
+        }
+
+        100% {
+          opacity: 1;
+          text-shadow: 0 0 6px #ff00cc;
+        }
+      }
+
     }
   </style>
 </head>
+
 <body>
+  <div id="characterSelect">
+    <h1>ESCOLHA SEU PERSONAGEM</h1>
+    <div class="button-group">
+      <button class="character-button" onclick="startGame('GC')">Gustavo </button>
+      <button class="character-button" onclick="startGame('OX')">Olavo </button>
+    </div>
+  </div>
+  <style>
+    #characterSelect {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0b0b0b;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      font-family: 'Press Start 2P', cursive;
+      color: #00ccff;
+      z-index: 10;
+      text-align: center;
+      background-image: repeating-linear-gradient(0deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.02) 1px,
+          transparent 1px,
+          transparent 3px);
+      animation: flicker 2s infinite;
+    }
 
-<audio id="bgMusicGame" src="The Rebel Path - Cyberpunk 2077 OST.mp3" loop></audio>
+    #characterSelect h1 {
+      font-size: 20px;
+      margin-bottom: 30px;
+      color: #ff00cc;
+      text-shadow: 0 0 8px #ff00cc, 0 0 16px #9900ff;
+      animation: flickerTitle 1.5s infinite;
+    }
 
-<div id="hud"></div>
-<canvas id="gameCanvas" width="640" height="480"></canvas>
-<script>
-const bgMusicGame = document.getElementById("bgMusicGame");
+    .button-group {
+      display: flex;
+      gap: 30px;
+    }
 
-function fadeInAudio(audio, duration = 1000) {
-  return new Promise(resolve => {
-    const step = 50;
-    audio.volume = 0;
-    audio.play().catch(() => {});
-    const volStep = 1 / (duration / step);
-    const fadeInterval = setInterval(() => {
-      if (audio.volume + volStep < 1) {
-        audio.volume += volStep;
-      } else {
-        audio.volume = 1;
-        clearInterval(fadeInterval);
-        resolve();
+    .character-button {
+      font-size: 12px;
+      padding: 18px 32px;
+      background: linear-gradient(to bottom, #1a1a1a, #000);
+      border: 3px solid #00ccff;
+      border-radius: 5px;
+      color: #00ffff;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow:
+        0 0 10px #00ccff,
+        0 0 20px #00ccff,
+        inset 0 0 5px #000;
+      font-family: 'Press Start 2P', cursive;
+      transition: all 0.3s ease;
+      animation: pulseBtn 2s infinite;
+    }
+
+    .character-button:hover {
+      background: #330033;
+      color: #ffffff;
+      box-shadow:
+        0 0 20px #ff00ff,
+        0 0 40px #ff00ff,
+        inset 0 0 10px #000;
+    }
+
+    @keyframes flicker {
+
+      0%,
+      100% {
+        opacity: 1;
       }
-    }, step);
-  });
-}
 
-window.addEventListener("load", () => {
-  fadeInAudio(bgMusicGame, 1000);
-});
+      50% {
+        opacity: 0.98;
+      }
 
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const hud = document.getElementById('hud');
-
-const imgOlavo = new Image();
-imgOlavo.src = 'olavo_topdown.png';
-
-const imgGustavo = new Image();
-imgGustavo.src = 'gustavo_topdown.png';
-
-const imgEnemy = new Image();
-imgEnemy.src = 'enemy_topdown.png';
-
-const imgMesa = new Image();
-imgMesa.src = 'mesa_topdown.png';
-
-const tileSize = 32;
-const map = [
-  [1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [1,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,5,0,0,0],
-  [1,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,1],
-  [1,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1],
-];
-
-const tileColors = {
-  0: '#444', 1: '#999', 2: '#804000', 3: '#553311', 4: '#003366', 5: '#228B22'
-};
-const solidTiles = [1, 2, 3, 4, 5];
-
-function drawTile(x, y, type) {
-  if (type === 3 && imgMesa.complete) {
-    ctx.drawImage(imgMesa, x * tileSize, y * tileSize, tileSize, tileSize);
-    return;
-  }
-
-  ctx.fillStyle = tileColors[type] || 'magenta';
-  ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-}
-
-function drawMap() {
-  for (let y = 0; y < map.length; y++) {
-    for (let x = 0; x < map[y].length; x++) {
-      drawTile(x, y, map[y][x]);
-    }
-  }
-}
-
-const mesaX = 9 * tileSize;
-const mesaY = 4 * tileSize;
-
-if (imgMesa.complete) {
-  ctx.drawImage(imgMesa, mesaX, mesaY, tileSize * 2, tileSize * 2);
-}
-
-let playerHealth = 100;
-
-class Character {
-  constructor(name, x, y, color, element, weaponType, ability) {
-    this.name = name;
-    this.x = x;
-    this.y = y;
-    this.color = color;
-    this.element = element;
-    this.weaponType = weaponType;
-    this.ability = ability;
-    this.size = 42;
-    this.speed = 2;
-    this.cooldown = 0;
-    this.angle = 0;
-    this.usingAbility = false;
-  }
-
-  update(keys) {
-    this.usingAbility = keys[' '];
-    if (this.cooldown > 0) this.cooldown--;
-    let nextX = this.x;
-    let nextY = this.y;
-    if (keys['w']) nextY -= this.speed;
-    if (keys['s']) nextY += this.speed;
-    if (keys['a']) nextX -= this.speed;
-    if (keys['d']) nextX += this.speed;
-
-    const centerX = nextX + this.size / 2;
-const centerY = nextY + this.size / 2;
-
-if (!checkCollision(centerX, this.y + this.size / 2)) this.x = nextX;
-if (!checkCollision(this.x + this.size / 2, centerY)) this.y = nextY;
-
-    this.angle = Math.atan2(mouse.y - (this.y + this.size / 2), mouse.x - (this.x + this.size / 2));
-  }
-
-  render() {
-  ctx.save();
-  ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
-  ctx.rotate(this.angle);
-  
-  let img = this.name === "GC" ? imgGustavo : imgOlavo;
-  if (img.complete) {
-    ctx.drawImage(img, -this.size / 2, -this.size / 2, this.size, this.size);
-  } else {
-    ctx.fillStyle = this.color;
-    ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
-  }
-
-  ctx.restore();
-
-  if (this.usingAbility) {
-    ctx.fillStyle = this.element === 'Gelo' ? 'lightblue' : 'orange';
-    ctx.beginPath();
-    ctx.arc(this.x + this.size / 2, this.y + this.size / 2, 60, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-  useAbility() {
-    if (this.cooldown === 0) {
-      this.ability(this);
-      this.cooldown = 60;
-    }
-  }
-}
-
-class Enemy {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-    this.size = 42;
-    this.color = 'purple';
-    this.alive = true;
-  }
-
-  update(target) {
-    if (!this.alive) return;
-    let dx = target.x - this.x;
-    let dy = target.y - this.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist > 1) {
-      const speed = 1;
-      const newX = this.x + dx / dist * speed;
-      const newY = this.y + dy / dist * speed;
-      if (!checkCollision(newX, this.y)) this.x = newX;
-      if (!checkCollision(this.x, newY)) this.y = newY;
-    }
-
-    if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
-      playerHealth -= 0.3;
-      if (playerHealth <= 0) {
-        alert("Você foi derrotado!");
-        window.location.reload();
+      70% {
+        opacity: 0.95;
       }
     }
-  }
 
-  render() {
-  if (!this.alive) return;
+    @keyframes flickerTitle {
 
-  ctx.save();
-  ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
+      0%,
+      100% {
+        opacity: 1;
+        text-shadow: 0 0 8px #ff00cc;
+      }
 
-  if (imgEnemy.complete) {
-    ctx.drawImage(imgEnemy, -this.size / 2, -this.size / 2, this.size, this.size);
-  } else {
-    ctx.fillStyle = this.color;
-    ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
-  }
+      50% {
+        opacity: 0.85;
+        text-shadow: 0 0 14px #9900ff;
+      }
+    }
 
-  ctx.restore();
-}
-}
+    @keyframes pulseBtn {
 
-let enemies = [
-  new Enemy(300, 100),
-  new Enemy(500, 200),
-  new Enemy(250, 350),
-  new Enemy(100, 250),
-];
+      0%,
+      100% {
+        box-shadow: 0 0 10px #00ccff, 0 0 20px #00ccff;
+      }
 
-let effects = [];
-let mouse = { x: 0, y: 0 };
-canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
-  mouse.x = e.clientX - rect.left;
-  mouse.y = e.clientY - rect.top;
-});
+      50% {
+        box-shadow: 0 0 20px #ff00ff, 0 0 40px #ff00ff;
+      }
+    }
+  </style>
+  <audio id="bgMusicGame" src="The Rebel Path - Cyberpunk 2077 OST.mp3" loop></audio>
 
-const gustavo = new Character("GC", 64, 64, 'cyan', 'Gelo', 'Katana', (self) => {
-  const angle = Math.atan2(mouse.y - (self.y + self.size / 2), mouse.x - (self.x + self.size / 2));
-  const speed = 6;
-  effects.push({
-    type: 'ice',
-    x: self.x + self.size / 2,
-    y: self.y + self.size / 2,
-    vx: Math.cos(angle) * speed,
-    vy: Math.sin(angle) * speed,
-    ttl: 60
-  });
-});
+  <div id="hud"></div>
+  <canvas id="gameCanvas" width="640" height="480"></canvas>
+  <script>
+    const bgMusicGame = document.getElementById("bgMusicGame");
 
-const olavo = new Character("OX", 100, 200, 'red', 'Fogo', 'Katana', (self) => {
-  const angle = Math.atan2(mouse.y - (self.y + self.size / 2), mouse.x - (self.x + self.size / 2));
-  const speed = 6;
-  effects.push({
-    type: 'fire',
-    x: self.x + self.size / 2,
-    y: self.y + self.size / 2,
-    vx: Math.cos(angle) * speed,
-    vy: Math.sin(angle) * speed,
-    ttl: 60
-  });
-});
+    function fadeInAudio(audio, duration = 1000) {
+      return new Promise(resolve => {
+        const step = 50;
+        audio.volume = 0;
+        audio.play().catch(() => { });
+        const volStep = 1 / (duration / step);
+        const fadeInterval = setInterval(() => {
+          if (audio.volume + volStep < 1) {
+            audio.volume += volStep;
+          } else {
+            audio.volume = 1;
+            clearInterval(fadeInterval);
+            resolve();
+          }
+        }, step);
+      });
+    }
 
-let currentCharacter = olavo;
-const characters = [gustavo, olavo];
+    window.addEventListener("load", () => {
+      fadeInAudio(bgMusicGame, 1000);
+    });
 
-let keys = {};
-window.addEventListener('keydown', e => {
-  keys[e.key.toLowerCase()] = true;
-  if (e.key === 'Tab') {
-    e.preventDefault();
-    const index = characters.indexOf(currentCharacter);
-    currentCharacter = characters[(index + 1) % characters.length];
-  }
-    if (e.key.toLowerCase() === 'e') {
-    currentCharacter.useAbility();
-  }
-canvas.addEventListener('mousedown', e => {
-  if (e.button === 0) {
-    currentCharacter.useAbility();
-  }
-});
-canvas.addEventListener('touchstart', () => {
-  currentCharacter.useAbility();
-});
-});
-window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const hud = document.getElementById('hud');
 
-function checkCollision(centerX, centerY) {
-  const halfSize = currentCharacter.size / 2;
-  const left = Math.floor((centerX - halfSize) / tileSize);
-  const right = Math.floor((centerX + halfSize) / tileSize);
-  const top = Math.floor((centerY - halfSize) / tileSize);
-  const bottom = Math.floor((centerY + halfSize) / tileSize);
-  
-  const tiles = [
-    map[top]?.[left], map[top]?.[right],
-    map[bottom]?.[left], map[bottom]?.[right]
-  ];
-  return tiles.some(t => solidTiles.includes(t));
-}
+    const imgOlavo = new Image();
+    imgOlavo.src = 'olavo_topdown.png';
 
-function drawHealthBar() {
-  ctx.fillStyle = 'black';
-  ctx.fillRect(20, 20, 200, 20);
-  ctx.fillStyle = 'lime';
-  ctx.fillRect(20, 20, 2 * playerHealth, 20);
-  ctx.strokeStyle = 'white';
-  ctx.strokeRect(20, 20, 200, 20);
-}
+    const imgGustavo = new Image();
+    imgGustavo.src = 'gustavo_topdown.png';
 
-function updateHUD() {
-  hud.innerHTML = `
+    const imgEnemy = new Image();
+    imgEnemy.src = 'enemy_topdown.png';
+
+    const imgMesa = new Image();
+    imgMesa.src = 'mesa_topdown.png';
+
+    const tileSize = 32;
+    const map = [
+      [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1],
+    ];
+
+    const tileColors = {
+      0: '#444', 1: '#999', 2: '#804000', 3: '#553311', 4: '#003366', 5: '#228B22'
+    };
+    const solidTiles = [1, 2, 3, 4, 5];
+
+    function drawTile(x, y, type) {
+      if (type === 3 && imgMesa.complete) {
+        ctx.drawImage(imgMesa, x * tileSize, y * tileSize, tileSize, tileSize);
+        return;
+      }
+
+      ctx.fillStyle = tileColors[type] || 'magenta';
+      ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+    }
+
+    function drawMap() {
+      for (let y = 0; y < map.length; y++) {
+        for (let x = 0; x < map[y].length; x++) {
+          drawTile(x, y, map[y][x]);
+        }
+      }
+    }
+
+    const mesaX = 9 * tileSize;
+    const mesaY = 4 * tileSize;
+
+    if (imgMesa.complete) {
+      ctx.drawImage(imgMesa, mesaX, mesaY, tileSize * 2, tileSize * 2);
+    }
+
+    let playerHealth = 100;
+
+    class Character {
+      constructor(name, x, y, color, element, weaponType, ability) {
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.element = element;
+        this.weaponType = weaponType;
+        this.ability = ability;
+        this.size = 42;
+        this.speed = 2;
+        this.cooldown = 0;
+        this.angle = 0;
+        this.usingAbility = false;
+      }
+
+      update(keys) {
+        this.usingAbility = keys[' '];
+        if (this.cooldown > 0) this.cooldown--;
+        let nextX = this.x;
+        let nextY = this.y;
+        if (keys['w']) nextY -= this.speed;
+        if (keys['s']) nextY += this.speed;
+        if (keys['a']) nextX -= this.speed;
+        if (keys['d']) nextX += this.speed;
+
+        const centerX = nextX + this.size / 2;
+        const centerY = nextY + this.size / 2;
+
+        if (!checkCollision(centerX, this.y + this.size / 2)) this.x = nextX;
+        if (!checkCollision(this.x + this.size / 2, centerY)) this.y = nextY;
+
+        this.angle = Math.atan2(mouse.y - (this.y + this.size / 2), mouse.x - (this.x + this.size / 2));
+      }
+
+      render() {
+        ctx.save();
+        ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
+        ctx.rotate(this.angle);
+
+        let img = this.name === "GC" ? imgGustavo : imgOlavo;
+        if (img.complete) {
+          ctx.drawImage(img, -this.size / 2, -this.size / 2, this.size, this.size);
+        } else {
+          ctx.fillStyle = this.color;
+          ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+        }
+
+        ctx.restore();
+
+        if (this.usingAbility) {
+          ctx.fillStyle = this.element === 'Gelo' ? 'lightblue' : 'orange';
+          ctx.beginPath();
+          ctx.arc(this.x + this.size / 2, this.y + this.size / 2, 60, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      useAbility() {
+        if (this.cooldown === 0) {
+          this.ability(this);
+          this.cooldown = 60;
+        }
+      }
+    }
+
+    class Enemy {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = 42;
+        this.color = 'purple';
+        this.alive = true;
+      }
+
+      update(target) {
+        if (!this.alive) return;
+        let dx = target.x - this.x;
+        let dy = target.y - this.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 1) {
+          const speed = 1;
+          const newX = this.x + dx / dist * speed;
+          const newY = this.y + dy / dist * speed;
+          if (!checkCollision(newX, this.y)) this.x = newX;
+          if (!checkCollision(this.x, newY)) this.y = newY;
+        }
+
+        if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
+          playerHealth -= 0.3;
+          if (playerHealth <= 0) {
+            alert("Você foi derrotado!");
+            window.location.reload();
+          }
+        }
+      }
+
+      render() {
+        if (!this.alive) return;
+
+        ctx.save();
+        ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
+
+        if (imgEnemy.complete) {
+          ctx.drawImage(imgEnemy, -this.size / 2, -this.size / 2, this.size, this.size);
+        } else {
+          ctx.fillStyle = this.color;
+          ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+        }
+
+        ctx.restore();
+      }
+    }
+
+    let enemies = [
+      new Enemy(300, 100),
+      new Enemy(500, 200),
+      new Enemy(250, 350),
+      new Enemy(100, 250),
+    ];
+
+    let effects = [];
+    let mouse = { x: 0, y: 0 };
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+    });
+
+    const gustavo = new Character("GC", 64, 64, 'cyan', 'Gelo', 'Katana', (self) => {
+      const slashRange = 60;
+      const slashAngle = Math.atan2(mouse.y - (self.y + self.size / 2), mouse.x - (self.x + self.size / 2));
+
+      // Cria um efeito visual temporário
+      effects.push({
+        type: 'slash',
+        x: self.x + self.size / 2 + Math.cos(slashAngle) * slashRange,
+        y: self.y + self.size / 2 + Math.sin(slashAngle) * slashRange,
+        angle: slashAngle,
+        ttl: 15
+      });
+
+      for (const e of enemies) {
+        if (!e.alive) continue;
+
+        const dx = e.x + e.size / 2 - (self.x + self.size / 2);
+        const dy = e.y + e.size / 2 - (self.y + self.size / 2);
+        const dist = Math.hypot(dx, dy);
+        const enemyAngle = Math.atan2(dy, dx);
+        const angleDiff = Math.abs(enemyAngle - slashAngle);
+
+        // Se estiver dentro do alcance e ângulo
+        if (dist < slashRange && angleDiff < Math.PI / 4) {
+          e.alive = false;
+        }
+      }
+    });
+
+    const olavo = new Character("OX", 100, 200, 'red', 'Fogo', 'Escopeta', (self) => {
+      const angle = Math.atan2(mouse.y - (self.y + self.size / 2), mouse.x - (self.x + self.size / 2));
+      const speed = 6;
+      effects.push({
+        type: 'fire',
+        x: self.x + self.size / 2,
+        y: self.y + self.size / 2,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        ttl: 60
+      });
+    });
+
+    let currentCharacter = olavo;
+    const characters = [gustavo, olavo];
+
+    let keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.key.toLowerCase()] = true;
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const index = characters.indexOf(currentCharacter);
+        currentCharacter = characters[(index + 1) % characters.length];
+      }
+      if (e.key.toLowerCase() === 'e') {
+        currentCharacter.useAbility();
+      }
+      canvas.addEventListener('mousedown', e => {
+        if (e.button === 0) {
+          currentCharacter.useAbility();
+        }
+      });
+      canvas.addEventListener('touchstart', () => {
+        currentCharacter.useAbility();
+      });
+    });
+    window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+    function checkCollision(centerX, centerY) {
+      const halfSize = currentCharacter.size / 2;
+      const left = Math.floor((centerX - halfSize) / tileSize);
+      const right = Math.floor((centerX + halfSize) / tileSize);
+      const top = Math.floor((centerY - halfSize) / tileSize);
+      const bottom = Math.floor((centerY + halfSize) / tileSize);
+
+      const tiles = [
+        map[top]?.[left], map[top]?.[right],
+        map[bottom]?.[left], map[bottom]?.[right]
+      ];
+      return tiles.some(t => solidTiles.includes(t));
+    }
+
+    function drawHealthBar() {
+      ctx.fillStyle = 'black';
+      ctx.fillRect(20, 20, 200, 20);
+      ctx.fillStyle = 'lime';
+      ctx.fillRect(20, 20, 2 * playerHealth, 20);
+      ctx.strokeStyle = 'white';
+      ctx.strokeRect(20, 20, 200, 20);
+    }
+
+    function updateHUD() {
+      hud.innerHTML = `
     <strong>Personagem:</strong> ${currentCharacter.name}<br>
     <strong>Elemento:</strong> ${currentCharacter.element}<br>
     <strong>Arma:</strong> ${currentCharacter.weaponType}<br>
     <small>[WASD] mover, [E] habilidade, [Espaço] poder, [Tab] trocar</small>
   `;
-}
-
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawMap();
-  currentCharacter.update(keys);
-  currentCharacter.render();
-
-  for (const enemy of enemies) {
-    enemy.update(currentCharacter);
-    enemy.render();
-  }
-
-  effects = effects.filter(effect => effect.ttl-- > 0);
-  for (const effect of effects) {
-    effect.x += effect.vx;
-    effect.y += effect.vy;
-
-    if (effect.type === 'ice') {
-      ctx.fillStyle = 'lightblue';
-      ctx.beginPath();
-      ctx.arc(effect.x, effect.y, 6, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (effect.type === 'fire') {
-      ctx.fillStyle = 'orange';
-      ctx.fillRect(effect.x - 8, effect.y - 14, 16, 28);
     }
 
-    for (const e of enemies) {
-      if (e.alive &&
-          Math.abs(e.x + e.size / 2 - effect.x) < 20 &&
-          Math.abs(e.y + e.size / 2 - effect.y) < 20) {
-        e.alive = false;
-        effect.ttl = 0;
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawMap();
+      currentCharacter.update(keys);
+      currentCharacter.render();
+
+      for (const enemy of enemies) {
+        enemy.update(currentCharacter);
+        enemy.render();
       }
+
+      effects = effects.filter(effect => effect.ttl-- > 0);
+      for (const effect of effects) {
+        effect.x += effect.vx;
+        effect.y += effect.vy;
+
+        if (effect.type === 'slash') {
+          ctx.save();
+          ctx.translate(effect.x, effect.y);
+          ctx.rotate(effect.angle);
+          ctx.strokeStyle = 'white';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(-20, 0);
+          ctx.lineTo(20, 0);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        if (effect.type === 'ice') {
+          ctx.fillStyle = 'lightblue';
+          ctx.beginPath();
+          ctx.arc(effect.x, effect.y, 6, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (effect.type === 'fire') {
+          ctx.fillStyle = 'orange';
+          ctx.fillRect(effect.x - 8, effect.y - 14, 16, 28);
+        }
+
+        for (const e of enemies) {
+          if (e.alive &&
+            Math.abs(e.x + e.size / 2 - effect.x) < 20 &&
+            Math.abs(e.y + e.size / 2 - effect.y) < 20) {
+            e.alive = false;
+            effect.ttl = 0;
+          }
+        }
+      }
+
+      drawHealthBar();
+      updateHUD();
+
+      if (enemies.every(e => !e.alive)) {
+        ctx.fillStyle = 'lime';
+        ctx.font = '32px sans-serif';
+        ctx.fillText('Fase Concluída!', canvas.width / 2 - 110, 300);
+      }
+
+      requestAnimationFrame(gameLoop);
     }
-  }
 
-  drawHealthBar();
-  updateHUD();
+    function spawnInimigoAleatorio() {
+      let x, y;
+      const margem = 40;
 
-  if (enemies.every(e => !e.alive)) {
-    ctx.fillStyle = 'lime';
-    ctx.font = '32px sans-serif';
-    ctx.fillText('Fase Concluída!', canvas.width / 2 - 110, 300);
-  }
+      // Preciso ajustar o lado que os inimigos vem: (topo, em baixo, esquerda ou direita)
+      const lado = Math.floor(Math.random() * 4);
+      if (lado === 0) { // topo
+        x = Math.random() * canvas.width;
+        y = -margem;
+      } else if (lado === 1) { // direita
+        x = canvas.width + margem;
+        y = Math.random() * canvas.height;
+      } else if (lado === 2) { // em baixo
+        x = Math.random() * canvas.width;
+        y = canvas.height + margem;
+      } else { // esquerda
+        x = -margem;
+        y = Math.random() * canvas.height;
+      }
 
-  requestAnimationFrame(gameLoop);
-}
-gameLoop();
+      enemies.push(new Enemy(x, y));
+    }
 
-function spawnInimigoAleatorio() {
-  let x, y;
-  const margem = 40;
+    setInterval(() => {
+      const quantidade = Math.floor(Math.random() * 10) + 1;
+      for (let i = 0; i < quantidade; i++) {
+        spawnInimigoAleatorio();
+      }
+    }, 7000);
+    function startGame(selected) {
+      document.getElementById("characterSelect").style.display = "none";
 
-  // Preciso ajustar o lado que os inimigos vem: (topo, em baixo, esquerda ou direita)
-  const lado = Math.floor(Math.random() * 4);
-  if (lado === 0) { // topo
-    x = Math.random() * canvas.width;
-    y = -margem;
-  } else if (lado === 1) { // direita
-    x = canvas.width + margem;
-    y = Math.random() * canvas.height;
-  } else if (lado === 2) { // em baixo
-    x = Math.random() * canvas.width;
-    y = canvas.height + margem;
-  } else { // esquerda
-    x = -margem;
-    y = Math.random() * canvas.height;
-  }
+      // Define personagem inicial
+      if (selected === "GC") {
+        currentCharacter = gustavo;
+      } else {
+        currentCharacter = olavo;
+      }
 
-  enemies.push(new Enemy(x, y));
-}
-
-setInterval(() => {
-  const quantidade = Math.floor(Math.random() * 10) + 1;
-  for (let i = 0; i < quantidade; i++) {
-    spawnInimigoAleatorio();
-  }
-}, 7000);
-
-</script>
+      fadeInAudio(bgMusicGame, 1000);
+      gameLoop();
+    }
+  </script>
 </body>
+
 </html>
